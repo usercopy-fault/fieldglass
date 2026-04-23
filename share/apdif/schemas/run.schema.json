@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APDIF Run",
+  "type": "object",
+  "required": [
+    "run_id",
+    "case_id",
+    "command_id",
+    "target",
+    "profile",
+    "status",
+    "started_at",
+    "apdif_version"
+  ],
+  "properties": {
+    "run_id": { "type": "string" },
+    "case_id": { "type": "string" },
+    "command_id": { "type": "string" },
+    "target": { "type": "object" },
+    "profile": { "type": "string" },
+    "status": { "type": "string" },
+    "started_at": { "type": "string" },
+    "finished_at": { "type": ["string", "null"] },
+    "apdif_version": { "type": "string" }
+  },
+  "additionalProperties": true
+}

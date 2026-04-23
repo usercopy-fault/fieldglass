@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APDIF Observation",
+  "type": "object",
+  "required": [
+    "observation_id",
+    "type",
+    "subject",
+    "attributes",
+    "source_evidence_ids",
+    "normalizer_id",
+    "confidence",
+    "notes"
+  ],
+  "properties": {
+    "observation_id": { "type": "string" },
+    "type": { "type": "string" },
+    "subject": { "type": "object" },
+    "attributes": { "type": "object" },
+    "source_evidence_ids": { "type": "array", "items": { "type": "string" } },
+    "normalizer_id": { "type": "string" },
+    "confidence": { "type": "string" },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": true
+}

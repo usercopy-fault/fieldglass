@@ -1,0 +1,28 @@
+alias	canonical	deprecated_in	remove_after	note
+device	device			
+app	app			
+net	net			
+trace	trace			
+raw	raw			
+static	static			
+dynamic	dynamic			
+storage	storage			
+webview	webview			
+intent	intent			
+triage	triage			
+report	report			
+cheat	cheat			
+env	env			
+case	case			
+parser	parser			
+frida-profile	frida-profile			
+finding	finding			
+schema	schema			
+assurance	assurance			
+confidence	confidence			
+compat	compat			
+doctor	env	1.2.0	1.4	Route to env check
+inventory	device	1.2.0	1.4	Route to device packages --third-party
+shizuku	app	1.2.0	1.4	Route to app info --pkg moe.shizuku.privileged.api
+triage4	triage	1.2.0	1.4	Route to the structured triage path
+report4	report	1.2.0	1.4	Route to the structured report path

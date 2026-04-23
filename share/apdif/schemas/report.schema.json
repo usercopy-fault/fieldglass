@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APDIF Report",
+  "type": "object",
+  "required": ["report_id", "run", "summary_counts", "confidence", "evidence", "observations", "findings"],
+  "properties": {
+    "report_id": { "type": "string" },
+    "run": { "type": "object" },
+    "summary_counts": { "type": "object" },
+    "confidence": { "type": "object" },
+    "evidence": { "type": "array" },
+    "observations": { "type": "array" },
+    "findings": { "type": "array" }
+  },
+  "additionalProperties": true
+}

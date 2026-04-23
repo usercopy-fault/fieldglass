@@ -1,0 +1,7 @@
+APDIF i3 Integration
+====================
+
+Suggested bindings:
+  bindsym $mod+Shift+a exec --no-startup-id ${HOME}/.local/bin/apdif-menu
+  bindsym $mod+a exec --no-startup-id ${TERMINAL:-wezterm} start --always-new-process -e bash -lc 'apdif cheat list; exec bash'
+  bindsym $mod+Shift+d exec --no-startup-id ${TERMINAL:-wezterm} start --always-new-process -e bash -lc 'apdif device doctor; exec bash'

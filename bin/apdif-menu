@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+command -v rofi >/dev/null 2>&1 || {
+  echo 'rofi not found'
+  exit 1
+}
+
+prompt_value() {
+  local label="$1"
+  local value
+  value="$(printf '' | rofi -dmenu -p "$label")"
+  [[ -n "$value" ]] || exit 0
+  printf '%s\n' "$value"
+}
+
+choice="$(
+  printf '%s\n' \
+    'cheat list' \
+    'tui launch' \
+    'device doctor' \
+    'device info' \
+    'app focus' \
+    'triage run' \
+    'report build' \
+    'env check' |
+    rofi -dmenu -p APDIF
+)"
+[[ -n "$choice" ]] || exit 0
+
+args=()
+case "$choice" in
+  'cheat list') args=(cheat list) ;;
+  'tui launch') args=(tui run) ;;
+  'device doctor') args=(device doctor) ;;
+  'device info') args=(device info) ;;
+  'app focus') args=(app focus) ;;
+  'triage run')
+    pkg="$(prompt_value 'Package')"
+    case_name="$(prompt_value 'Case')"
+    args=(triage run --pkg "$pkg" --case "$case_name")
+    ;;
+  'report build')
+    pkg="$(prompt_value 'Package')"
+    case_name="$(prompt_value 'Case')"
+    args=(report build --pkg "$pkg" --case "$case_name")
+    ;;
+  'env check') args=(env check) ;;
+  *) exit 1 ;;
+esac
+
+exec apdif "${args[@]}"

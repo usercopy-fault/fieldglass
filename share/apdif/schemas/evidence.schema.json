@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APDIF Evidence",
+  "type": "object",
+  "required": [
+    "evidence_id",
+    "collector_id",
+    "target_ref",
+    "raw_path",
+    "stderr_path",
+    "content_type",
+    "command",
+    "exit_code",
+    "collected_at",
+    "collector_status"
+  ],
+  "properties": {
+    "evidence_id": { "type": "string" },
+    "collector_id": { "type": "string" },
+    "target_ref": { "type": "string" },
+    "raw_path": { "type": "string" },
+    "stderr_path": { "type": "string" },
+    "sha256": { "type": "string" },
+    "content_type": { "type": "string" },
+    "command": { "type": "string" },
+    "exit_code": { "type": "integer" },
+    "collected_at": { "type": "string" },
+    "collector_status": { "type": "string", "enum": ["ok", "error"] },
+    "size_bytes": { "type": "integer" }
+  },
+  "additionalProperties": true
+}

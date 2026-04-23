@@ -1,0 +1,468 @@
+# APDIF `-intC` hidden menu patch (Cobra/pflag version)
+
+## Why this shape
+
+If APDIF uses Cobra/pflag, a single-dash multi-letter token like `-intC` is **not** parsed as a normal long flag.
+pflag treats single-dash input as shorthand letters, not a long option. So the robust implementation is:
+
+1. Add a tiny argv rewrite in `main.go`
+2. Register a hidden command named `intheCloset`
+3. Keep it out of normal `-h` / `--help` output
+4. Let `apdif -intC` and `apdif --intC` both route into that hidden command
+
+---
+
+## 1) Patch `main.go`
+
+Replace your current `main.go` with this shape, or merge the `normalizeHiddenAliases` call into your existing startup path.
+
+```go
+package main
+
+import (
+	"os"
+	"strings"
+
+	"apdif/cmd"
+)
+
+func normalizeHiddenAliases(argv []string) []string {
+	if len(argv) <= 1 {
+		return argv
+	}
+
+	out := make([]string, 0, len(argv))
+	out = append(out, argv[0])
+
+	for _, a := range argv[1:] {
+		switch strings.TrimSpace(a) {
+		case "-intC", "--intC":
+			out = append(out, "intheCloset")
+		default:
+			out = append(out, a)
+		}
+	}
+
+	return out
+}
+
+func main() {
+	os.Args = normalizeHiddenAliases(os.Args)
+	cmd.Execute()
+}
+```
+
+---
+
+## 2) Add hidden command file
+
+Create `cmd/inthe_closet.go`:
+
+```go
+package cmd
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/spf13/cobra"
+)
+
+const intheClosetCheat = `APDIF CHEAT
+===========
+
+CORE SYNTAX
+  apdif <group> <action> [target/options] [flags]
+
+MENTAL MODEL
+  env       tool health / environment
+  doctor    dependency and setup sanity
+  device    phone / adb / runtime target
+  app       installed package inspection
+  static3   APK-first static analysis
+  dynamic2  runtime-state inspection
+  intent    exported components / deep links
+  webview   WebView posture / JS bridge checks
+  storage   prefs / db / file review
+  triage4   orchestrated multi-stage assessment
+  finding   normalize and add findings
+  report4   build report output
+
+GLOBAL FLAGS
+  --pkg       installed package name
+  --apk       path to APK
+  --case      case folder / assessment ID
+  --serial    adb device serial
+  --profile   baseline | deep | webview-heavy | payments
+  --json      structured output
+  --format    md | html | json
+  --out       output path
+
+FIRST COMMANDS
+  apdif --help
+  apdif version
+  apdif cheat
+  apdif env
+  apdif doctor
+
+DEVICE
+  apdif device list
+  apdif device check
+  apdif device verify --serial SERIAL
+  apdif device props --serial SERIAL
+  apdif device props --serial SERIAL --json
+  apdif device env
+  apdif device env --json
+
+APP
+  apdif app info --pkg com.target.app
+  apdif app info --pkg com.target.app --json
+  apdif app perms --pkg com.target.app
+  apdif app perms --pkg com.target.app --json
+  apdif app exported --pkg com.target.app
+  apdif app services --pkg com.target.app
+  apdif app receivers --pkg com.target.app
+  apdif app providers --pkg com.target.app
+  apdif app manifest --pkg com.target.app
+  apdif app manifest --pkg com.target.app --json
+
+STATIC3
+  apdif static3 run --apk target.apk --case case1
+  apdif static3 run --apk target.apk --case case1 --json
+  apdif static3 strings --apk target.apk --case case1
+  apdif static3 manifest --apk target.apk --case case1
+  apdif static3 grep --apk target.apk --pattern 'WebView|addJavascriptInterface|android:exported'
+  apdif static3 jadx --apk target.apk --case case1
+
+DYNAMIC2
+  apdif dynamic2 snapshot --pkg com.target.app --case case1
+  apdif dynamic2 snapshot --pkg com.target.app --case case1 --serial SERIAL
+  apdif dynamic2 launch --pkg com.target.app --serial SERIAL
+  apdif dynamic2 state --pkg com.target.app --case case1
+  apdif dynamic2 state --pkg com.target.app --case case1 --json
+  apdif dynamic2 hooks --pkg com.target.app --profile deep
+
+INTENT
+  apdif intent scan --pkg com.target.app
+  apdif intent scan --pkg com.target.app --json
+  apdif intent deeplinks --pkg com.target.app
+  apdif intent exported --pkg com.target.app
+  apdif intent launch --pkg com.target.app --activity ACTIVITY_NAME
+  apdif intent fuzz --pkg com.target.app --case case1
+
+WEBVIEW
+  apdif webview inspect --pkg com.target.app
+  apdif webview inspect --pkg com.target.app --json
+  apdif webview bridges --pkg com.target.app
+  apdif webview settings --pkg com.target.app
+  apdif webview urls --pkg com.target.app --case case1
+
+STORAGE
+  apdif storage scan --pkg com.target.app
+  apdif storage scan --pkg com.target.app --json
+  apdif storage prefs --pkg com.target.app
+  apdif storage db --pkg com.target.app
+  apdif storage files --pkg com.target.app
+
+TRIAGE4
+  apdif triage4 run --apk target.apk --case case1 --profile baseline
+  apdif triage4 run --apk target.apk --case case1 --profile baseline --json
+  apdif triage4 run --apk target.apk --case case1 --profile deep --json
+  apdif triage4 run --apk target.apk --case case1 --profile webview-heavy --json
+  apdif triage4 run --apk target.apk --case case1 --profile payments --json
+
+FINDING
+  apdif finding add \
+    --case case1 \
+    --pkg com.target.app \
+    --id WEBVIEW-001 \
+    --title "Risky WebView configuration" \
+    --severity medium \
+    --control-id CTRL-WEBVIEW-001 \
+    --source-type static \
+    --source-path ./evidence/webview.txt
+
+REPORT4
+  apdif report4 build --case case1 --pkg com.target.app --profile baseline --format md
+  apdif report4 build --case case1 --pkg com.target.app --profile deep --format md
+  apdif report4 build --case case1 --pkg com.target.app --profile deep --format html
+  apdif report4 build --case case1 --pkg com.target.app --profile deep --format json
+
+MOST VALUABLE COMMANDS
+  apdif env
+  apdif doctor
+  apdif device check
+  apdif device verify --serial SERIAL
+  apdif app info --pkg com.target.app --json
+  apdif app perms --pkg com.target.app --json
+  apdif app exported --pkg com.target.app
+  apdif static3 run --apk app.apk --case case1 --json
+  apdif dynamic2 snapshot --pkg com.target.app --case case1 --serial SERIAL
+  apdif intent scan --pkg com.target.app --json
+  apdif webview inspect --pkg com.target.app --json
+  apdif storage scan --pkg com.target.app --json
+  apdif triage4 run --apk app.apk --case case1 --profile deep --json
+  apdif report4 build --case case1 --pkg com.target.app --profile deep --format md
+`
+
+var intheClosetCmd = &cobra.Command{
+	Use:    "intheCloset",
+	Short:  "internal hidden operator menu",
+	Long:   "internal hidden operator menu",
+	Hidden: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println(strings.TrimRight(intheClosetCheat, "\n"))
+		return nil
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(intheClosetCmd)
+}
+```
+
+---
+
+## 3) Build and test
+
+```bash
+go build -o apdif .
+./apdif -intC
+./apdif --intC
+./apdif intheCloset
+./apdif -h
+```
+
+Expected:
+- `./apdif -intC` prints the hidden cheat block
+- `./apdif --intC` prints the hidden cheat block
+- `./apdif intheCloset` also works
+- `./apdif -h` does **not** show `intheCloset`
+
+---
+
+## 4) EOF-in commands
+
+From repo root:
+
+```bash
+cat > main.go <<'EOF2'
+package main
+
+import (
+	"os"
+	"strings"
+
+	"apdif/cmd"
+)
+
+func normalizeHiddenAliases(argv []string) []string {
+	if len(argv) <= 1 {
+		return argv
+	}
+
+	out := make([]string, 0, len(argv))
+	out = append(out, argv[0])
+
+	for _, a := range argv[1:] {
+		switch strings.TrimSpace(a) {
+		case "-intC", "--intC":
+			out = append(out, "intheCloset")
+		default:
+			out = append(out, a)
+		}
+	}
+
+	return out
+}
+
+func main() {
+	os.Args = normalizeHiddenAliases(os.Args)
+	cmd.Execute()
+}
+EOF2
+```
+
+```bash
+mkdir -p cmd
+cat > cmd/inthe_closet.go <<'EOF2'
+package cmd
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/spf13/cobra"
+)
+
+const intheClosetCheat = `APDIF CHEAT
+===========
+
+CORE SYNTAX
+  apdif <group> <action> [target/options] [flags]
+
+MENTAL MODEL
+  env       tool health / environment
+  doctor    dependency and setup sanity
+  device    phone / adb / runtime target
+  app       installed package inspection
+  static3   APK-first static analysis
+  dynamic2  runtime-state inspection
+  intent    exported components / deep links
+  webview   WebView posture / JS bridge checks
+  storage   prefs / db / file review
+  triage4   orchestrated multi-stage assessment
+  finding   normalize and add findings
+  report4   build report output
+
+GLOBAL FLAGS
+  --pkg       installed package name
+  --apk       path to APK
+  --case      case folder / assessment ID
+  --serial    adb device serial
+  --profile   baseline | deep | webview-heavy | payments
+  --json      structured output
+  --format    md | html | json
+  --out       output path
+
+FIRST COMMANDS
+  apdif --help
+  apdif version
+  apdif cheat
+  apdif env
+  apdif doctor
+
+DEVICE
+  apdif device list
+  apdif device check
+  apdif device verify --serial SERIAL
+  apdif device props --serial SERIAL
+  apdif device props --serial SERIAL --json
+  apdif device env
+  apdif device env --json
+
+APP
+  apdif app info --pkg com.target.app
+  apdif app info --pkg com.target.app --json
+  apdif app perms --pkg com.target.app
+  apdif app perms --pkg com.target.app --json
+  apdif app exported --pkg com.target.app
+  apdif app services --pkg com.target.app
+  apdif app receivers --pkg com.target.app
+  apdif app providers --pkg com.target.app
+  apdif app manifest --pkg com.target.app
+  apdif app manifest --pkg com.target.app --json
+
+STATIC3
+  apdif static3 run --apk target.apk --case case1
+  apdif static3 run --apk target.apk --case case1 --json
+  apdif static3 strings --apk target.apk --case case1
+  apdif static3 manifest --apk target.apk --case case1
+  apdif static3 grep --apk target.apk --pattern 'WebView|addJavascriptInterface|android:exported'
+  apdif static3 jadx --apk target.apk --case case1
+
+DYNAMIC2
+  apdif dynamic2 snapshot --pkg com.target.app --case case1
+  apdif dynamic2 snapshot --pkg com.target.app --case case1 --serial SERIAL
+  apdif dynamic2 launch --pkg com.target.app --serial SERIAL
+  apdif dynamic2 state --pkg com.target.app --case case1
+  apdif dynamic2 state --pkg com.target.app --case case1 --json
+  apdif dynamic2 hooks --pkg com.target.app --profile deep
+
+INTENT
+  apdif intent scan --pkg com.target.app
+  apdif intent scan --pkg com.target.app --json
+  apdif intent deeplinks --pkg com.target.app
+  apdif intent exported --pkg com.target.app
+  apdif intent launch --pkg com.target.app --activity ACTIVITY_NAME
+  apdif intent fuzz --pkg com.target.app --case case1
+
+WEBVIEW
+  apdif webview inspect --pkg com.target.app
+  apdif webview inspect --pkg com.target.app --json
+  apdif webview bridges --pkg com.target.app
+  apdif webview settings --pkg com.target.app
+  apdif webview urls --pkg com.target.app --case case1
+
+STORAGE
+  apdif storage scan --pkg com.target.app
+  apdif storage scan --pkg com.target.app --json
+  apdif storage prefs --pkg com.target.app
+  apdif storage db --pkg com.target.app
+  apdif storage files --pkg com.target.app
+
+TRIAGE4
+  apdif triage4 run --apk target.apk --case case1 --profile baseline
+  apdif triage4 run --apk target.apk --case case1 --profile baseline --json
+  apdif triage4 run --apk target.apk --case case1 --profile deep --json
+  apdif triage4 run --apk target.apk --case case1 --profile webview-heavy --json
+  apdif triage4 run --apk target.apk --case case1 --profile payments --json
+
+FINDING
+  apdif finding add \
+    --case case1 \
+    --pkg com.target.app \
+    --id WEBVIEW-001 \
+    --title "Risky WebView configuration" \
+    --severity medium \
+    --control-id CTRL-WEBVIEW-001 \
+    --source-type static \
+    --source-path ./evidence/webview.txt
+
+REPORT4
+  apdif report4 build --case case1 --pkg com.target.app --profile baseline --format md
+  apdif report4 build --case case1 --pkg com.target.app --profile deep --format md
+  apdif report4 build --case case1 --pkg com.target.app --profile deep --format html
+  apdif report4 build --case case1 --pkg com.target.app --profile deep --format json
+
+MOST VALUABLE COMMANDS
+  apdif env
+  apdif doctor
+  apdif device check
+  apdif device verify --serial SERIAL
+  apdif app info --pkg com.target.app --json
+  apdif app perms --pkg com.target.app --json
+  apdif app exported --pkg com.target.app
+  apdif static3 run --apk app.apk --case case1 --json
+  apdif dynamic2 snapshot --pkg com.target.app --case case1 --serial SERIAL
+  apdif intent scan --pkg com.target.app --json
+  apdif webview inspect --pkg com.target.app --json
+  apdif storage scan --pkg com.target.app --json
+  apdif triage4 run --apk app.apk --case case1 --profile deep --json
+  apdif report4 build --case case1 --pkg com.target.app --profile deep --format md
+`
+
+var intheClosetCmd = &cobra.Command{
+	Use:    "intheCloset",
+	Short:  "internal hidden operator menu",
+	Long:   "internal hidden operator menu",
+	Hidden: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println(strings.TrimRight(intheClosetCheat, "\n"))
+		return nil
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(intheClosetCmd)
+}
+EOF2
+```
+
+Then:
+
+```bash
+gofmt -w main.go cmd/inthe_closet.go
+go build -o apdif .
+./apdif -intC
+./apdif -h
+```
+
+---
+
+## 5) Notes
+
+- If APDIF is already using Cobra/pflag, this is the correct shape for `-intC`.
+- Do **not** try to register `-intC` as a normal Cobra flag; pflag interprets single-dash multi-letter input as shorthand bundling, not a long flag.
+- `Hidden: true` keeps the command out of normal help output.
+- The argv rewrite keeps your desired operator UX without polluting the normal command surface.

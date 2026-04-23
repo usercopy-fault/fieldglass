@@ -1,0 +1,64 @@
+APDIF CHEAT SHEET
+=================
+
+Grammar
+-------
+(cmd){options}[flags]
+
+Legend
+------
+(cmd)    action path
+{options} named inputs
+[flags]  optional behavior switches
+
+Core device triage
+------------------
+apdif env check{}{--json}
+apdif device doctor{}{--serial SERIAL}
+apdif device info{}{--serial SERIAL}
+apdif device props{}{--serial SERIAL}
+apdif device packages{}{--third-party --serial SERIAL}
+
+App triage
+----------
+apdif app focus{}{--serial SERIAL}
+apdif app info{--pkg PKG}{--json --serial SERIAL}
+apdif app perms{--pkg PKG}{--json --serial SERIAL}
+apdif app runtime-perms{--pkg PKG}{--json --serial SERIAL}
+apdif app appops{--pkg PKG}{--json --serial SERIAL}
+apdif app path{--pkg PKG}{--serial SERIAL}
+apdif app pull-apk{--pkg PKG --case NAME}{--serial SERIAL}
+apdif app exported{--pkg PKG}{--json --serial SERIAL}
+apdif app deep-links{--pkg PKG}{--json --serial SERIAL}
+
+Static and parsing
+------------------
+apdif static summary{--apk FILE}{--json}
+apdif parser manifest{--apk FILE}[]
+apdif schema show{--type finding|evidence|run|observation|report}[]
+apdif schema validate{--file FILE --type finding|evidence|run|observation|report}[]
+
+Structured workflow
+-------------------
+apdif triage run{--pkg PKG | --apk FILE}{--case NAME --profile PROFILE --json --serial SERIAL}
+apdif triage score{--case NAME}{--run-id RUN_ID}
+apdif report build{--case NAME --pkg PKG}{--format md|json --profile PROFILE --run-id RUN_ID}
+apdif assurance class{--case NAME}{--run-id RUN_ID --json}
+apdif tui run{}{--rebuild}
+
+Manual findings and instrumentation
+-----------------------------------
+apdif finding add{--case NAME --pkg PKG --id ID --title TITLE}[--severity SEV --status STATUS --evidence TEXT --control-id ID --source-type TYPE --source-path FILE --tags a,b]
+apdif finding list{--case NAME}[]
+apdif frida-profile list{}[]
+apdif frida-profile run{--pkg PKG --profile PROFILE}[--spawn --pause --serial SERIAL]
+
+Compatibility shims
+-------------------
+apdif compat list{}[]
+Legacy aliases still supported with warnings:
+  apdif doctor -> apdif env check
+  apdif inventory -> apdif device packages --third-party
+  apdif shizuku -> apdif app info --pkg moe.shizuku.privileged.api
+  apdif triage4 -> apdif triage
+  apdif report4 -> apdif report

@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+: "${APDIF_REPO_ROOT:=$(cd "${SCRIPT_DIR}/.." && pwd)}"
+: "${APDIF_HOME:=${APDIF_REPO_ROOT}/share/apdif}"
+export APDIF_HOME APDIF_REPO_ROOT
+source "$APDIF_HOME/lib/common.sh"
+
+normalize_hidden_module() {
+  case "${1:-}" in
+    -intC|--intC|intheCloset)
+      printf 'inthecloset\n'
+      ;;
+    *)
+      printf '%s\n' "${1:-help}"
+      ;;
+  esac
+}
+
+module="$(normalize_hidden_module "${1:-help}")"
+shift || true
+
+show_module_help() {
+  local target="$1"
+  case "$target" in
+    compat) usage_triplet 'apdif compat list' '{}' '[]' 'list deprecated aliases and compatibility shims' ;;
+    doctor) usage_triplet 'apdif doctor' '{}' '[--json]' 'deprecated alias for apdif env check' ;;
+    inventory) usage_triplet 'apdif inventory' '{}' '[--json --serial SERIAL]' 'deprecated alias for apdif device packages --third-party' ;;
+    shizuku) usage_triplet 'apdif shizuku' '{}' '[--json --serial SERIAL]' 'deprecated alias for apdif app info --pkg moe.shizuku.privileged.api' ;;
+    device|app|net|trace|raw|static|dynamic|storage|webview|intent|triage|report|cheat|env|case|parser|frida-profile|finding|schema|assurance|confidence|tui)
+      exec "$APDIF_HOME/plugins/${target}.sh" help
+      ;;
+    *)
+      usage_block
+      exit 0
+      ;;
+  esac
+}
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" || "${1:-}" == "help" ]]; then
+  case "${module,,}" in
+    doctor|inventory|shizuku) show_module_help "${module,,}" ;;
+    *) show_module_help "${module,,}" ;;
+  esac
+  exit 0
+fi
+
+module_lower="${module,,}"
+if [[ "$module_lower" == *"--help" ]]; then
+  case "${module_lower%--help}" in
+    doctor|inventory|shizuku) show_module_help "${module_lower%--help}" ;;
+    *) show_module_help "${module_lower%--help}" ;;
+  esac
+  exit 0
+fi
+
+read -r canonical_module deprecated_in remove_after note < <(resolve_module_alias "$module_lower")
+warn_deprecated_module "$module_lower" "$canonical_module" "$deprecated_in" "$remove_after" "$note"
+
+case "$module_lower" in
+  help|-h|--help)
+    usage_block
+    exit 0
+    ;;
+  version|-v|--version)
+    printf '%s\n' "$APDIF_VERSION"
+    exit 0
+    ;;
+  doctor)
+    exec "$APDIF_HOME/plugins/env.sh" check "$@"
+    ;;
+  inventory)
+    exec "$APDIF_HOME/plugins/device.sh" packages --third-party "$@"
+    ;;
+  shizuku)
+    exec "$APDIF_HOME/plugins/app.sh" info --pkg moe.shizuku.privileged.api "$@"
+    ;;
+esac
+
+case "$canonical_module" in
+  compat)
+    if [[ "${1:-list}" != "list" ]]; then
+      _die "Unknown compat command: ${1:-}"
+    fi
+    compat_list
+    ;;
+  triage)
+    if [[ "$module_lower" == "triage4" ]]; then
+      exec "$APDIF_HOME/plugins/triage.sh" "$@" --profile baseline
+    fi
+    exec "$APDIF_HOME/plugins/triage.sh" "$@"
+    ;;
+  report)
+    if [[ "$module_lower" == "report4" ]]; then
+      exec "$APDIF_HOME/plugins/report.sh" "$@" --profile baseline
+    fi
+    exec "$APDIF_HOME/plugins/report.sh" "$@"
+    ;;
+  inthecloset)
+    exec "$APDIF_HOME/plugins/inthecloset.sh" "$@"
+    ;;
+  device|app|net|trace|raw|static|dynamic|storage|webview|intent|cheat|env|case|parser|frida-profile|finding|schema|assurance|confidence|tui)
+    exec "$APDIF_HOME/plugins/${canonical_module}.sh" "$@"
+    ;;
+  *)
+    usage_block
+    _die "Unknown module: ${module}. Try 'apdif --help'."
+    ;;
+esac
