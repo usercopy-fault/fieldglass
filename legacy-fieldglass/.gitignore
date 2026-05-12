@@ -1,0 +1,4 @@
+/tui/apdif
+/tui/.cache/
+/share/apdif/__pycache__/
+/share/apdif/**/__pycache__/

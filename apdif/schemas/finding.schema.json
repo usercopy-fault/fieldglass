@@ -1,0 +1,1 @@
+{"type":"object","required":["title","severity","status"]}

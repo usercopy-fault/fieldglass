@@ -1,4 +1,8 @@
-/tui/apdif
-/tui/.cache/
-/share/apdif/__pycache__/
-/share/apdif/**/__pycache__/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+*.egg-info/
+build/
+dist/
+.DS_Store
