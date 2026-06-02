@@ -1,109 +1,162 @@
-# APDIF
-
-APDIF is a shell-first Android Package & Debug Inspection Framework <----> [INSPECT WHAT'S UNDER]
-
-
 <p align="center">
-  <img src="docs/img/apdif-logo.png" alt="APDIF Logo" width="100%">
+  <img src="docs/img/apdif-logo.png" alt="APDIF logo" width="100%">
 </p>
-
 
 # APDIF
 
 **Android Package & Device Inspection Framework**
 
-       > **Motto:** **APDIF, inspect whats _under_**
+> **Motto:** **APDIF — inspect whats _under_**
 
+APDIF is a shell-first Android security testing CLI for inspecting packages, triaging apps, and generating concise case reports.
 
-APDIF is a focused Android security testing CLI for inspecting packages, triaging apps, and building assurance-style reports.
-
-It currently works **best on rooted Android devices**.
+It is built for practical Android app security testing, rooted-device workflows, package inspection, and local evidence collection.
 
 ---
 
 ## What it does
 
-APDIF helps you:
+APDIF helps you quickly inspect Android targets and collect useful security context:
 
-<--- --> inspect Android packages and APK targets
- <---  <--- collect package and device details
-  ---->    <--- triage installed apps or APK files
-       --->  --> review storage, databases, files, and WebView-related artifacts
-           <---->  <--> build final reports from collected case data
+- package and APK triage
+- installed app inspection
+- permission and manifest review
+- deep link, receiver, service, and provider enumeration
+- WebView, files, preferences, database, and storage review
+- device doctor checks
+- Markdown and JSON report generation
 
-It is built for practical Android app security testing and local device inspection workflows.
+---
 
--------------------------
-{                             
-## Requirements()                 };
+## Requirements
 
 APDIF currently works best with:
 
-- **Rooted Android device**
+- a **rooted Android device**
 - `adb`
 - shell access
-- basic Android utilities available on-device
-- a Linux host is recommended for the smoothest workflow
+- Android platform tools
+- Linux host environment
 
-> **Note:** Rooted workflows are the main supported path right now.
+Rooted workflows are the main supported path for now. Non-root support can be expanded later.
 
-------------------------->
+---
 
 ## Install
 
-### Clone the repository
+Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/apdif.git
-cd apdif
-
-
-## Repo Layout
-
-- `bin/apdif` - primary launcher
-- `bin/apdif-menu` - rofi-driven launcher
-- `bin/apdif-tui` - direct TUI launcher
-- `share/apdif` - shell plugins, collectors, renderers, schemas, tests
-- `tui` - bundled Go TUI source
-- `contrib` - original overlay/TUI/inthecloset source artifacts preserved from `~/Downloads`
-
-## Common Commands
-
-```bash
-./bin/apdif --help
-./bin/apdif cheat list
-./bin/apdif parser manifest --apk target.apk
-./bin/apdif tui build
-./bin/apdif tui run
-./bin/apdif -intC
+git clone https://github.com/usercopy-fault/fieldglass.git
+cd fieldglass
 ```
 
-## Verification
+Make the launcher executable:
 
 ```bash
-./share/apdif/tests/run.sh
-chmod +x apdif
+chmod +x bin/apdif 2>/dev/null || chmod +x apdif
+```
+
+Optional: add APDIF to your PATH:
+
+```bash
 mkdir -p ~/.local/bin
-OPTIO--->NAL --add to $PATH
-ln -sf "$PWD/apdif" ~/.local/bin/apdif
-cd tui && go build ./...
+ln -sf "$PWD/bin/apdif" ~/.local/bin/apdif 2>/dev/null || ln -sf "$PWD/apdif" ~/.local/bin/apdif
 ```
-<------------>VERIFY<---------><--or don't-->----<--->
-`apdif --help`
-     #CMD assist#
-` apdif cheat list `
-      ---#--->You good ? <---?--->
-                 ` apdif device doctor
-apdif device doctor --serial SERIAL `
-              --- TRIAGE-WORKFLOW ---
-`apdif triage run --pkg PKG --case NAME --profile PROFILE
-apdif triage run --apk FILE --case NAME --profile PROFILE
+
+Verify:
+
+```bash
+apdif --help
+```
+
+---
+
+## Commands
+
+Show help:
+
+```bash
+apdif --help
+```
+
+List command patterns:
+
+```bash
+apdif cheat list
+```
+
+Run device checks:
+
+```bash
+apdif device doctor
+apdif device doctor --serial SERIAL
+```
+
+Run triage against an installed package:
+
+```bash
+apdif triage run --pkg PKG --case NAME --profile PROFILE
 apdif triage run --pkg PKG --case NAME --profile PROFILE --json
-apdif triage run --pkg PKG --case NAME --profile PROFILE --serial SERIAL`
+apdif triage run --pkg PKG --case NAME --profile PROFILE --serial SERIAL
+```
 
-                 ---BUILD_FINAL_REPORT---
-                  
-`apdif report build --case NAME --pkg PKG --profile PROFILE
+Run triage against an APK file:
+
+```bash
+apdif triage run --apk FILE --case NAME --profile PROFILE
+```
+
+Build a final report:
+
+```bash
+apdif report build --case NAME --pkg PKG --profile PROFILE
 apdif report build --case NAME --pkg PKG --profile PROFILE --format md
-apdif report build --case NAME --pkg PKG --profile PROFILE --format json `
+apdif report build --case NAME --pkg PKG --profile PROFILE --format json
+```
 
+---
+
+## Screenshots
+
+### Command grammar
+
+<p align="center">
+  <img src="docs/img/apdif-help.png" alt="APDIF command grammar" width="100%">
+</p>
+
+### Runtime snapshot
+
+<p align="center">
+  <img src="docs/img/apdif-runtime.png" alt="APDIF runtime snapshot" width="75%">
+</p>
+
+### Triage output
+
+<p align="center">
+  <img src="docs/img/apdif-webview.png" alt="APDIF triage output" width="75%">
+</p>
+
+---
+
+## Example workflow
+
+```bash
+apdif device doctor
+apdif triage run --pkg com.example.app --case example_case --profile default
+apdif report build --case example_case --pkg com.example.app --profile default --format md
+```
+
+---
+
+## Status
+
+APDIF is under active development.
+
+Current focus:
+
+- rooted Android workflows
+- cleaner package triage
+- better report generation
+- stable command grammar
+- stronger evidence output
