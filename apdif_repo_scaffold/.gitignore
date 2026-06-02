@@ -1,0 +1,18 @@
+# APDIF runtime output
+workspace/
+cases/
+out/
+reports/generated/
+*.log
+*.tmp
+
+# Python / tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
